@@ -1,13 +1,17 @@
+require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
 const app = express()
 const cors = require('cors')
+const Person = require('./models/person')
+
 app.use(express.static('build'))
 app.use(cors())
 app.use(express.json())
-
 morgan.token('body', function (req, res) { return JSON.stringify(req.body) })
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms  :body'))
+
+
 
 let data=[
     {
@@ -36,7 +40,9 @@ let data=[
 
 
 app.get('/api/persons', (request, response) => {
-    response.json(data)
+    Person.find({}).then(persons => {
+        response.json(persons)
+    })
 })
 
 app.get('/api/info', (request, response) => {
@@ -76,11 +82,13 @@ app.post('/api/persons', (request, response) => {
             error: 'Name must be unique'
         })
     }
-    console.log(person)
-    person.id=Math.floor(Math.random()*2000)
-    data=data.concat(person)
-    console.log(person)
-    response.json(person)
+
+    const person_data=new Person({
+        number : person.number,
+        name: person.name,
+    })
+    console.log(person_data)
+    person_data.save().then(savedPerson=>{ response.json(savedPerson)})
 
 })
 const unknownEndpoint = (request, response) => {
